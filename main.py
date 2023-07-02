@@ -1,3 +1,6 @@
+import time
+import threading
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
@@ -6,8 +9,6 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 from auth_data import bank_password, bank_emale
-
-import time
 
 options = webdriver.ChromeOptions()
 
@@ -20,6 +21,11 @@ def set_driver_options(options:webdriver.ChromeOptions):
     
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--ignore-ssl-errors')
+    
+    # Запустить в режиме без графического интерфейса
+    # options.add_argument("--headless")
+
+set_driver_options(options)
 
 caps = DesiredCapabilities().CHROME
 caps['pageLoadStrategy'] = 'eager'
@@ -27,8 +33,31 @@ caps['pageLoadStrategy'] = 'eager'
 service = Service(desired_capabilities=caps, executable_path=r"C:\drivers\chromedriver\chromedriver.exe")
 driver = webdriver.Chrome(service=service, options=options)
 
-try:
+# class всплывающего диалогового окна
+class_name = "ant-modal-content"
+stop_threads = False
 
+try:
+    
+    # Функция для проверки наличия класса 'new_class'
+    def check_dialog_class(driver:webdriver.Chrome):
+        try:
+            element = driver.find_element(By.CLASS_NAME, class_name)
+            # Действия после появления класса class_name
+            click_dont_prompt_again(driver)
+            # click_trade_confirm_button(driver, "Confirm")
+            # click_trade_confirm_button(driver, "Cancel")
+            close_dialog_window(driver, element)
+        except:
+            pass
+        
+    # Функция для выполнения проверки в отдельном потоке
+    def check_dialog_thread(stop, driver:webdriver.Chrome):
+        while True:
+            check_dialog_class(driver)
+            if stop():
+                break    
+    
     # Passing authentication...
     def authentication(driver:webdriver.Chrome):
         email_input = driver.find_element(By.XPATH, "//input[@placeholder='Please enter your email']")
@@ -40,10 +69,14 @@ try:
         password_input.send_keys(bank_password)
         password_input.send_keys(Keys.ENTER)    
 
+    # нажать Market
+    def click_order(driver:webdriver.Chrome, arg:str):
+        order = driver.find_element(By.XPATH, f"//div[contains(text(), '{arg}')]")
+        driver.execute_script("arguments[0].click();", order)
+
     # установить значение amount
     def set_amount(driver:webdriver.Chrome, arg:str, val:str):
-        InputForm = driver.find_element(By.XPATH, f"//span[contains(text(), '{arg}')]")
-        input = InputForm.find_element(By.XPATH, "./parent::div//input")
+        input = driver.find_element(By.XPATH, f"//input[@placeholder='{arg}']")                        
         input.clear()
         input.send_keys(val)
 
@@ -85,9 +118,9 @@ try:
             print("Чек-бокс не найден")
 
     # закрыть всплывающее диалоговое окно
-    def close_dialog_window(driver:webdriver.Chrome):
+    def close_dialog_window(driver:webdriver.Chrome, dialog):
         try:
-            dialog = driver.find_element(By.CLASS_NAME, "ant-modal-content")
+            # dialog = driver.find_element(By.CLASS_NAME, "ant-modal-content")
             closeButton = dialog.find_element(By.XPATH, "//button[contains(@aria-label, 'Close')]")
             driver.execute_script("arguments[0].click();", closeButton)
         except NoSuchElementException:
@@ -103,22 +136,25 @@ try:
     driver.get("https://www.lbank.com/en-US/trade/btc_usdt/")
     time.sleep(3)
 
+    stop_threads = False
+    # Создание и запуск потока для выполнения проверки на всплывающее диалоговое окно
+    thread = threading.Thread(target=check_dialog_thread, args=(lambda : stop_threads, driver, ))
+    thread.start()
+
+    click_order(driver, "Market")
+        
     turn_trade_slider(driver, "tradeSliderGreen")
-    set_amount(driver, "Buying amount", "5")        
+    set_amount(driver, "Enter buying amount", "5")        
     click_trade_button(driver, "index_buy")
-    # click_trade_confirm_button(driver, "Confirm")
-    click_dont_prompt_again(driver)
-    close_dialog_window(driver)
     
     turn_trade_slider(driver, "tradeSliderRed")
-    set_amount(driver, "Selling amount", "3")
+    set_amount(driver, "Enter selling amount", "3")
     click_trade_button(driver, "index_sel")
-    click_dont_prompt_again(driver)
-    # click_trade_confirm_button(driver, "Cancel")
-    close_dialog_window(driver)
-    
+
 except Exception as ex:
     print(ex)
 finally:
+    stop_threads = True
+    thread.join()
     driver.close()
     driver.quit()
