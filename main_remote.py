@@ -1,8 +1,5 @@
-import os
 import time
 import threading
-
-from subprocess import call
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
