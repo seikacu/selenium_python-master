@@ -67,6 +67,7 @@ try:
         password_input = driver.find_element(By.XPATH, "//input[@placeholder='Please enter password']")
         password_input.clear()
         password_input.send_keys(bank_password)
+        
         password_input.send_keys(Keys.ENTER)    
 
     # нажать Market
@@ -142,13 +143,18 @@ try:
     thread.start()
 
     click_order(driver, "Market")
-        
+    time.sleep(1)        
     turn_trade_slider(driver, "tradeSliderGreen")
+    time.sleep(1)        
     set_amount(driver, "Enter buying amount", "5")        
+    time.sleep(1)        
     click_trade_button(driver, "index_buy")
     
+    time.sleep(1)        
     turn_trade_slider(driver, "tradeSliderRed")
+    time.sleep(1)        
     set_amount(driver, "Enter selling amount", "3")
+    time.sleep(1)        
     click_trade_button(driver, "index_sel")
 
 except Exception as ex:
