@@ -48,6 +48,7 @@ try:
             # click_trade_confirm_button(driver, "Confirm")
             # click_trade_confirm_button(driver, "Cancel")
             close_dialog_window(driver, element)
+            click_i_see(driver, element)
         except:
             pass
         
@@ -60,53 +61,78 @@ try:
     
     # Passing authentication...
     def authentication(driver:webdriver.Chrome):
-        email_input = driver.find_element(By.XPATH, "//input[@placeholder='Please enter your email']")
-        email_input.clear()
-        email_input.send_keys(bank_emale)
+        try:
+            email_input = driver.find_element(By.XPATH, "//input[@placeholder='Please enter your email']")
+            email_input.clear()
+            email_input.send_keys(bank_emale)
 
-        password_input = driver.find_element(By.XPATH, "//input[@placeholder='Please enter password']")
-        password_input.clear()
-        password_input.send_keys(bank_password)
-        
-        password_input.send_keys(Keys.ENTER)    
+            password_input = driver.find_element(By.XPATH, "//input[@placeholder='Please enter password']")
+            password_input.clear()
+            password_input.send_keys(bank_password)
+            
+            password_input.send_keys(Keys.ENTER)    
+        except NoSuchElementException:
+            print("Поля аутентификации не найдены")
+            pass
 
     # нажать Market
     def click_order(driver:webdriver.Chrome, arg:str):
-        order = driver.find_element(By.XPATH, f"//div[contains(text(), '{arg}')]")
-        driver.execute_script("arguments[0].click();", order)
+        try:
+            order = driver.find_element(By.XPATH, f"//div[contains(text(), '{arg}')]")
+            driver.execute_script("arguments[0].click();", order)
+        except NoSuchElementException:
+            print(f"Кнопка {arg} не найдена")
+            pass
+       
 
     # установить значение amount
     def set_amount(driver:webdriver.Chrome, arg:str, val:str):
-        input = driver.find_element(By.XPATH, f"//input[@placeholder='{arg}']")                        
-        input.clear()
-        input.send_keys(val)
+        try:
+            input = driver.find_element(By.XPATH, f"//input[@placeholder='{arg}']")                        
+            input.clear()
+            input.send_keys(val)
+        except NoSuchElementException:
+            print(f"Поле для ввода {arg} не найдено")
+            pass
 
     # установка слайдера в максимальное значение
-    def turn_trade_slider(driver:webdriver.Chrome, arg:str): 
-        slider = driver.find_element(By.XPATH, f"//div[contains(@class, '{arg}')]//div[@class='ant-slider-handle']")        
-        driver.execute_script("arguments[0].style.left = '100%'", slider)
-        driver.execute_script("arguments[0].style.transform = 'translateX(-50%)'", slider)
-        driver.execute_script("arguments[0].setAttribute('aria-valuenow', '100')", slider)
+    def turn_trade_slider(driver:webdriver.Chrome, arg:str):
+        try:
+            slider = driver.find_element(By.XPATH, f"//div[contains(@class, '{arg}')]//div[@class='ant-slider-handle']")        
+            driver.execute_script("arguments[0].style.left = '100%'", slider)
+            driver.execute_script("arguments[0].style.transform = 'translateX(-50%)'", slider)
+            driver.execute_script("arguments[0].setAttribute('aria-valuenow', '100')", slider)
 
-        # проценты
-        percentage_element = slider.find_element(By.XPATH, "//span[contains(@style, 'left: 100%')]")
-        driver.execute_script("arguments[0].style.left = '100%'", percentage_element)
-        driver.execute_script("arguments[0].innerText = '100%'", percentage_element)
-        
-        slider_track = slider.find_element(By.XPATH, "//div[@class='ant-slider-track']")
-        driver.execute_script("arguments[0].style.width = '100%'", slider_track)
+            # проценты
+            percentage_element = slider.find_element(By.XPATH, "//span[contains(@style, 'left: 100%')]")
+            driver.execute_script("arguments[0].style.left = '100%'", percentage_element)
+            driver.execute_script("arguments[0].innerText = '100%'", percentage_element)
+            
+            slider_track = slider.find_element(By.XPATH, "//div[@class='ant-slider-track']")
+            driver.execute_script("arguments[0].style.width = '100%'", slider_track)
+        except NoSuchElementException:
+            print(f"Не могу сдвинуть слайдер {arg}")
+            pass
 
     # нажать кнопку buy/sell
     def click_trade_button(driver:webdriver.Chrome, arg:str):
-        button = driver.find_element(By.XPATH, f"//button[contains(@class, '{arg}')]")
-        driver.execute_script("arguments[0].click();", button)
+        try:
+            button = driver.find_element(By.XPATH, f"//button[contains(@class, '{arg}')]")
+            driver.execute_script("arguments[0].click();", button)
+        except NoSuchElementException:
+            print(f"Не могу сдвинуть слайдер {arg}")
+            pass
 
     # нажать кнопку cancel/confirm Order
     # передаются два аргумента args {Cancel} / {Confirm}
     def click_trade_confirm_button(driver:webdriver.Chrome, arg:str):
-        span = driver.find_element(By.XPATH, f"//span[contains(text(), '{arg}')]")
-        button = span.find_element(By.XPATH, "./parent::button")
-        driver.execute_script("arguments[0].click();", button)
+        try:
+            span = driver.find_element(By.XPATH, f"//span[contains(text(), '{arg}')]")
+            button = span.find_element(By.XPATH, "./parent::button")
+            driver.execute_script("arguments[0].click();", button)
+        except NoSuchElementException:
+            print(f"Кнопка {arg} не найдена")
+            pass
 
     # активировать чек-бокс "Don't prompt again"
     def click_dont_prompt_again(driver:webdriver.Chrome):
@@ -115,18 +141,27 @@ try:
             check = span.find_element(By.XPATH, "./parent::div")
             driver.execute_script("arguments[0].click();", check)
         except NoSuchElementException:
-            # Обработка случая, когда элемент не найден
             print("Чек-бокс не найден")
+            pass
 
     # закрыть всплывающее диалоговое окно
     def close_dialog_window(driver:webdriver.Chrome, dialog):
         try:
-            # dialog = driver.find_element(By.CLASS_NAME, "ant-modal-content")
             closeButton = dialog.find_element(By.XPATH, "//button[contains(@aria-label, 'Close')]")
             driver.execute_script("arguments[0].click();", closeButton)
         except NoSuchElementException:
-            # Обработка случая, когда элемент не найден
-            print("Всплывающее диалоговое окно не найдено")           
+            print("Кнопка Close не найдена")    
+            pass       
+
+    # Нажать кнопку I see
+    def click_i_see(driver:webdriver.Chrome, dialog):
+        try:
+            span = dialog.find_element(By.XPATH, "//span[contains(text(), 'I see')]")
+            button = span.find_element(By.XPATH, "./parent::button")
+            driver.execute_script("arguments[0].click();", button)
+        except NoSuchElementException:
+            print("Кнопка I see не найдена")     
+            pass      
 
     driver.maximize_window
     driver.get("https://www.lbank.com/login/")
@@ -143,18 +178,18 @@ try:
     thread.start()
 
     click_order(driver, "Market")
-    time.sleep(1)        
+    time.sleep(2)        
     turn_trade_slider(driver, "tradeSliderGreen")
-    time.sleep(1)        
+    time.sleep(2)        
     set_amount(driver, "Enter buying amount", "5")        
-    time.sleep(1)        
+    time.sleep(2)        
     click_trade_button(driver, "index_buy")
     
-    time.sleep(1)        
+    time.sleep(2)        
     turn_trade_slider(driver, "tradeSliderRed")
-    time.sleep(1)        
+    time.sleep(2)        
     set_amount(driver, "Enter selling amount", "3")
-    time.sleep(1)        
+    time.sleep(2)        
     click_trade_button(driver, "index_sel")
 
 except Exception as ex:
