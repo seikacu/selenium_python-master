@@ -51,7 +51,9 @@ try:
             element = driver.find_element(By.CLASS_NAME, class_name)
             # Действия после появления класса class_name
             click_dont_prompt_again(driver)
+            # нажать кннопку подтверить
             # click_trade_confirm_button(driver, "Confirm")
+            # нажать кннопку отмена
             # click_trade_confirm_button(driver, "Cancel")
             close_dialog_window(driver, element)
             click_i_see(driver, element)
