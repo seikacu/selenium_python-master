@@ -5,15 +5,16 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 from auth_data import bank_password, bank_emale
 
 print("Режимы работы:")
-print("1 - Авторизация на сайте")
-print("2 - Подключиться к локальной сессии chrome и осуществить покупку")
-print("3 - Подключиться к локальной сессии chrome и оcуществить продажу")
+print("1 - Открыть lbank и авторизоваться на сайте")
+print("2 - Осуществить покупку")
+print("3 - Оcуществить продажу")
+
 mode = int(input("Введите номер режима: "))
 
 options = webdriver.ChromeOptions()
@@ -24,9 +25,11 @@ def set_driver_options(options:webdriver.ChromeOptions):
 
     # for ChromeDriver version 79.0.3945.16 or over
     options.add_argument("--disable-blink-features=AutomationControlled")
-    
+
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--ignore-ssl-errors')
+    
+    options.debugger_address = 'localhost:8989'
 
 set_driver_options(options)
 
@@ -34,10 +37,6 @@ caps = DesiredCapabilities().CHROME
 caps['pageLoadStrategy'] = 'eager'
 
 service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
-
-if mode == 2 or mode == 3:
-    options.debugger_address = 'localhost:8989'
-
 driver = webdriver.Chrome(service=service, options=options)
 
 # class всплывающего диалогового окна
@@ -45,7 +44,7 @@ class_name = "ant-modal-content"
 stop_threads = False
 
 try:
-    
+        
     # Функция для проверки наличия класса 'new_class'
     def check_dialog_class(driver:webdriver.Chrome):
         try:
@@ -77,9 +76,9 @@ try:
             password_input.clear()
             password_input.send_keys(bank_password)
             
-            password_input.send_keys(Keys.ENTER)    
-        except NoSuchElementException:
-            print("Поля аутентификации не найдены")
+            password_input.send_keys(Keys.ENTER)
+        except Exception:
+            print("Поля аутентификации не найдены или уже авторизованы")
             pass
 
     # нажать Market
@@ -94,8 +93,7 @@ try:
     # установить значение amount
     def set_amount(driver:webdriver.Chrome, arg:str, val:str):
         try:
-            input = driver.find_element(By.XPATH, f"//input[@placeholder='{arg}']")                        
-            input.clear()
+            input = driver.find_element(By.XPATH, f"//input[@placeholder='{arg}']")
             input.send_keys(val)
         except NoSuchElementException:
             print(f"Поле для ввода {arg} не найдено")
@@ -172,24 +170,17 @@ try:
     driver.maximize_window
     
     stop_threads = False
+    # Создание и запуск потока для выполнения проверки на всплывающее диалоговое окно
+    thread = threading.Thread(target=check_dialog_thread, args=(lambda : stop_threads, driver, ))
+    thread.start()
 
     if mode == 1:
         driver.get("https://www.lbank.com/login/")
-        time.sleep(3)
         authentication(driver)
-        time.sleep(15)
-        driver.get("https://www.lbank.com/en-US/trade/btc_usdt/")
-        time.sleep(5)
-        # Создание и запуск потока для выполнения проверки на всплывающее диалоговое окно
-        thread = threading.Thread(target=check_dialog_thread, args=(lambda : stop_threads, driver, ))
-        thread.start()
 
     if mode == 2:
         driver.get("https://www.lbank.com/en-US/trade/btc_usdt/")
-        time.sleep(1)
-        # Создание и запуск потока для выполнения проверки на всплывающее диалоговое окно
-        thread = threading.Thread(target=check_dialog_thread, args=(lambda : stop_threads, driver, ))
-        thread.start()
+        time.sleep(0.5)
         click_order(driver, "Market")
         turn_trade_slider(driver, "tradeSliderGreen")
         set_amount(driver, "Enter buying amount", "0.01")        
@@ -197,10 +188,7 @@ try:
 
     if mode == 3:
         driver.get("https://www.lbank.com/en-US/trade/btc_usdt/")
-        time.sleep(1)
-       # Создание и запуск потока для выполнения проверки на всплывающее диалоговое окно
-        thread = threading.Thread(target=check_dialog_thread, args=(lambda : stop_threads, driver, ))
-        thread.start()
+        time.sleep(0.5)
         click_order(driver, "Market")
         turn_trade_slider(driver, "tradeSliderRed")
         set_amount(driver, "Enter selling amount", "0.01")
@@ -211,5 +199,3 @@ except Exception as ex:
 finally:
     stop_threads = True
     thread.join()
-    driver.close()
-    driver.quit()
