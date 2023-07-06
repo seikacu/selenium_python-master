@@ -44,7 +44,7 @@ class_name = "ant-modal-content"
 stop_threads = False
 
 try:
-        
+                
     # Функция для проверки наличия класса 'new_class'
     def check_dialog_class(driver:webdriver.Chrome):
         try:
@@ -100,6 +100,8 @@ try:
             input.send_keys(Keys.BACKSPACE)
             input.send_keys(Keys.BACKSPACE)
             input.send_keys(Keys.BACKSPACE)
+            input.send_keys(Keys.BACKSPACE)
+            input.send_keys(Keys.BACKSPACE)
             input.send_keys(val)
         except NoSuchElementException:
             print(f"Поле для ввода {arg} не найдено")
@@ -108,18 +110,8 @@ try:
     # установка слайдера в максимальное значение
     def turn_trade_slider(driver:webdriver.Chrome, arg:str):
         try:
-            slider = driver.find_element(By.XPATH, f"//div[contains(@class, '{arg}')]//div[@class='ant-slider-handle']")        
-            driver.execute_script("arguments[0].style.left = '100%'", slider)
-            driver.execute_script("arguments[0].style.transform = 'translateX(-50%)'", slider)
-            driver.execute_script("arguments[0].setAttribute('aria-valuenow', '100')", slider)
-
-            # проценты
-            percentage_element = slider.find_element(By.XPATH, "//span[contains(@style, 'left: 100%')]")
-            driver.execute_script("arguments[0].style.left = '100%'", percentage_element)
-            driver.execute_script("arguments[0].innerText = '100%'", percentage_element)
-            
-            slider_track = slider.find_element(By.XPATH, "//div[@class='ant-slider-track']")
-            driver.execute_script("arguments[0].style.width = '100%'", slider_track)
+            slider = driver.find_element(By.XPATH, f"//div[contains(@class, '{arg}')]//span[@style='left: 100%;']")
+            slider.click()
         except NoSuchElementException:
             print(f"Не могу сдвинуть слайдер {arg}")
             pass
@@ -192,13 +184,13 @@ try:
     if mode == 3:
         click_order(driver, "Market")
         turn_trade_slider(driver, "tradeSliderGreen")
-        set_amount(driver, "Enter buying amount", "0.10")        
+        # set_amount(driver, "Enter buying amount", "0.10")        
         click_trade_button(driver, "index_buy")
 
     if mode == 4:
         click_order(driver, "Market")
         turn_trade_slider(driver, "tradeSliderRed")
-        set_amount(driver, "Enter selling amount", "0.01")
+        # set_amount(driver, "Enter selling amount", "0.01")
         click_trade_button(driver, "index_sel")
 
 except Exception as ex:
