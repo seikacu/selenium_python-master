@@ -1,3 +1,5 @@
+import os
+import sys
 import threading
 
 from selenium import webdriver
@@ -10,6 +12,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from auth_data import bank_password, bank_emale
 
 print("Режимы работы:")
+print("0 - Открыть браузер Chrome")
 print("1 - Открыть lbank и авторизоваться на сайте")
 print("2 - Ввести ссылку")
 print("3 - Осуществить покупку")
@@ -17,6 +20,11 @@ print("4 - Оcуществить продажу")
 
 mode = int(input("Введите номер режима: "))
 
+if mode == 0:
+    os.startfile (r"C:\WebDriver\chromedriver\Chrome.lnk")
+    sys.exit()
+    os._exit(0)
+    
 options = webdriver.ChromeOptions()
 
 def set_driver_options(options:webdriver.ChromeOptions):
